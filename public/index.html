@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6f7fb" />
+    <title>AI Assistant</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Local AI Assistant home">
+          <span class="brand-mark" aria-hidden="true">✦</span>
+          <span>AI <span class="brand-light">Assistant</span></span>
+        </a>
+        <div class="local-badge">
+          <span class="status-dot" aria-hidden="true"></span>
+          Gemini cloud model
+        </div>
+      </header>
+
+      <section class="chat-layout" aria-label="Chat with your AI assistant">
+        <div class="intro">
+          <p class="eyebrow">YOUR AI ASSISTANT</p>
+          <h1>A little help,<br />wherever you are.</h1>
+          <p class="intro-copy">
+          Ask a question, explore an idea, or get help with a task. Gemini
+          processes your chat, voice recordings, and uploaded images in the
+          cloud. Attach an image to ask about a picture.
+          </p>
+          <div class="model-note">
+            <span class="model-icon" aria-hidden="true">◉</span>
+            <span>
+              <strong>Text model</strong><br />
+              <span id="text-model-name">Checking Gemini...</span><br />
+              <strong>Image model</strong><br />
+              <span id="vision-model-name">Checking Gemini...</span>
+            </span>
+          </div>
+        </div>
+
+        <section class="chat-card" aria-label="Conversation">
+          <div class="chat-heading">
+            <div>
+              <h2>New conversation</h2>
+              <p>Chat, images, and voice are sent to Google Gemini.</p>
+            </div>
+            <button class="clear-button" id="clear-chat" type="button">
+              Clear chat
+            </button>
+          </div>
+
+          <div class="messages" id="messages" aria-live="polite">
+            <div class="welcome-message" id="welcome-message">
+              <div class="welcome-icon" aria-hidden="true">✦</div>
+              <h3>What would you like to figure out?</h3>
+              <p>Start with a question. You can always ask a follow-up.</p>
+              <div class="suggestions" aria-label="Try asking">
+                <button class="suggestion" type="button">
+                  Explain a tricky idea simply
+                </button>
+                <button class="suggestion" type="button">
+                  Help me plan my day
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <form class="composer" id="chat-form">
+            <label class="search-option" for="search-web">
+              <input id="search-web" type="checkbox" />
+              <span>
+                <strong>Search the web</strong>
+                <small id="search-status">
+                  Off · searches are sent to Tavily when enabled
+                </small>
+              </span>
+            </label>
+            <label class="visually-hidden" for="message-input">
+              Your message
+            </label>
+            <div class="composer-input">
+              <div class="image-preview" id="image-preview" hidden></div>
+              <textarea
+                id="message-input"
+                name="message"
+                rows="1"
+                maxlength="8000"
+                placeholder="Ask anything..."
+              ></textarea>
+            </div>
+            <input
+              class="visually-hidden"
+              id="image-input"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              aria-label="Choose an image"
+            />
+            <button
+              class="attach-button"
+              id="attach-button"
+              type="button"
+              aria-label="Attach an image"
+              title="Attach a JPG, PNG, or WebP image (up to 5 MB)"
+            >
+              <span aria-hidden="true">▧</span>
+            </button>
+            <button
+              class="mic-button"
+              id="mic-button"
+              type="button"
+              aria-label="Start voice input"
+              title="Record a voice message"
+            >
+              <span aria-hidden="true">🎙️</span>
+            </button>
+            <button class="send-button" id="send-button" type="submit">
+              <span id="send-label">Send</span>
+              <span aria-hidden="true">↑</span>
+            </button>
+            <p class="composer-hint" id="voice-status" aria-live="polite">
+              Enter to send · Shift + Enter for a new line
+            </p>
+            <p class="attachment-status" id="attachment-status" aria-live="polite">
+              Image chat needs the moondream vision model. When ready, run
+              <code>ollama pull moondream</code> in PowerShell.
+            </p>
+            <p class="search-result-status" id="search-result-status" aria-live="polite"></p>
+          </form>
+        </section>
+      </section>
+
+      <footer class="footer">
+        <span>Made for curious minds.</span>
+        <span>Local-first · No API key needed</span>
+      </footer>
+    </main>
+  </body>
+</html>
