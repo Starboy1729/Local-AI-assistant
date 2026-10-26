@@ -12,7 +12,8 @@ AI requests to Google's Gemini API. Ollama is no longer needed to use the app.
 - A Gemini API key created in Google AI Studio
 
 The app uses `gemini-3.1-flash-lite` for text, image understanding, and voice
-transcription. Google may change free-tier models, usage limits, or availability.
+transcription, and `gemini-nano-banana-2.1` for image generation. Google may
+change model availability, pricing, and usage limits.
 
 ## Start the app
 
@@ -54,9 +55,22 @@ paid plan.
   resizes images to at most 1,280 pixels on their longest side. The latest image
   remains available for follow-up questions; attaching a new one replaces the
   earlier image in the AI context.
+- Open the chat and choose the camera button to take a live photo. The browser
+  asks for camera permission only after you tap **Start camera**. The photo is
+  attached for review and is sent to Gemini only when you send your message.
+  Camera access requires `localhost` or HTTPS and a camera-enabled device.
 - Click the microphone to record a voice message, then click it again to stop.
   The recording is transcribed by Gemini and appears in the message box for you
   to review before sending. Recordings are limited to 60 seconds.
+- Click the headphones button to start hands-free voice chat. Speak, pause, and
+  the app transcribes and sends your words, then reads Gemini's reply aloud and
+  starts listening again. Click the button again to stop. Spoken replies use a
+  voice available in your browser or operating system.
+- Choose **Reply language** to have replies follow your message automatically
+  or use English, Hindi, Telugu, Tamil, Spanish, French, German, Arabic,
+  Japanese, or Chinese.
+- Choose **Create image**, describe what you want, and send it to generate an
+  image. Use **Download image** under the result to save it.
 - Click **Listen** under a reply to hear it with a voice installed in your
   browser or operating system.
 - Turn on **Search the web** to search for current information. The query goes
@@ -69,6 +83,10 @@ paid plan.
 Text, images, and voice recordings are sent to Google's Gemini API for
 processing. When web search is enabled, the query is also sent to Tavily. Do
 not send passwords, private documents, or other sensitive information.
+Image descriptions are sent to Google's image-generation model. Image
+generation has separate model availability, quota, and pricing from chat; an
+API key working for chat does not guarantee image generation is enabled or free.
+The app does not enable paid billing.
 
 Google's free-tier terms may allow submitted content to be used to improve
 Google products. The Gemini API free tier has changing rate and usage limits;
@@ -91,8 +109,8 @@ are correct.
 
 1. `public/app.js` sends chat messages, optimized images, or WAV voice
    recordings to this app's local Node.js server.
-2. `server.js` keeps the Gemini API key on the server and makes requests to
-   `gemini-3.1-flash-lite`.
+2. `server.js` keeps the Gemini API key on the server and calls Gemini for chat,
+   transcription, and image generation.
 3. Gemini streams text replies; the app displays them as they arrive.
 4. Optional Tavily search results are passed to Gemini as reference material.
 
@@ -122,6 +140,10 @@ never included in browser JavaScript or returned by the status endpoint.
   billing unless you choose to use paid service.
 - **The microphone does not start:** allow microphone access for
   `http://127.0.0.1:3000` in your browser settings, then reload the page.
+- **The camera does not start:** allow camera access for
+  `http://127.0.0.1:3000` in your browser settings. Camera access requires
+  `localhost` or HTTPS; you can attach a saved image if your device has no
+  camera or permission is unavailable.
 - **Web search reaches its free rate limit:** wait and try again later. Tavily
   keyless search needs no account, payment, or card.
 

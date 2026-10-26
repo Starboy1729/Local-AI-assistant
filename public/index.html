@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f6f7fb" />
+    <meta name="theme-color" content="#fff5f8" />
     <title>AI Assistant</title>
     <link rel="stylesheet" href="/styles.css" />
     <script src="/app.js" defer></script>
@@ -12,72 +12,159 @@
     <main class="app-shell">
       <header class="topbar">
         <a class="brand" href="/" aria-label="Local AI Assistant home">
-          <span class="brand-mark" aria-hidden="true">✦</span>
-          <span>AI <span class="brand-light">Assistant</span></span>
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 2.8 14.1 9.9 21.2 12l-7.1 2.1L12 21.2l-2.1-7.1L2.8 12l7.1-2.1L12 2.8Z" fill="currentColor"/><circle cx="19.2" cy="5" r="1.4" fill="currentColor"/></svg>
+          </span>
+          <span>mellow<span class="brand-light">mind</span></span>
         </a>
         <div class="local-badge">
           <span class="status-dot" aria-hidden="true"></span>
-          Gemini cloud model
+          A little help, whenever you need it
         </div>
       </header>
 
-      <section class="chat-layout" aria-label="Chat with your AI assistant">
+      <section class="chat-layout" aria-label="Meet your AI assistant">
         <div class="intro">
-          <p class="eyebrow">YOUR AI ASSISTANT</p>
-          <h1>A little help,<br />wherever you are.</h1>
+          <p class="eyebrow"><span></span> YOUR SPACE TO THINK</p>
+          <h1>A brighter way to figure things out.</h1>
           <p class="intro-copy">
-          Ask a question, explore an idea, or get help with a task. Gemini
-          processes your chat, voice recordings, and uploaded images in the
-          cloud. Attach an image to ask about a picture.
+            Big question, tiny task, or something you spotted out in the world —
+            bring it here. Ask, snap a photo, and explore your next idea.
           </p>
+          <blockquote class="hero-quote">
+            <span class="quote-mark" aria-hidden="true">“</span>
+            <span>Curiosity is a lovely place to start.</span>
+          </blockquote>
+
+          <div class="feature-grid" aria-label="Things you can do">
+            <article class="feature-card feature-card-pink">
+              <span class="feature-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M8.5 18.5h7M9.5 21h5M8.2 15.5a7 7 0 1 1 7.6 0c-.8.5-1.3 1.2-1.3 2H9.5c0-.8-.5-1.5-1.3-2Z"/><path d="M12 4v2m6 5h-2M8 11H6m1.8-4.2 1.4 1.4m7 0 1.4-1.4"/></svg>
+              </span>
+              <strong>Make it make sense</strong>
+              <span>Get a clear, friendly explanation.</span>
+            </article>
+            <article class="feature-card feature-card-blue">
+              <span class="feature-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 17 5-5 3 3 3-4 5 6"/></svg>
+              </span>
+              <strong>Ask about a photo</strong>
+              <span>Upload a picture or take one live.</span>
+            </article>
+            <article class="feature-card feature-card-lilac">
+              <span class="feature-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"/><path d="M3.5 9h17M3.5 15h17M12 3c2.2 2.4 3.3 5.4 3.3 9s-1.1 6.6-3.3 9c-2.2-2.4-3.3-5.4-3.3-9S9.8 5.4 12 3Z"/></svg>
+              </span>
+              <strong>Explore what's new</strong>
+              <span>Search the web when you need it.</span>
+            </article>
+            <article class="feature-card feature-card-blue">
+              <span class="feature-icon" aria-hidden="true">♫</span>
+              <strong>Talk it through</strong>
+              <span>Speak naturally and hear replies aloud.</span>
+            </article>
+            <article class="feature-card feature-card-pink">
+              <span class="feature-icon" aria-hidden="true">✧</span>
+              <strong>Imagine it</strong>
+              <span>Turn a written idea into an image.</span>
+            </article>
+          </div>
+
           <div class="model-note">
-            <span class="model-icon" aria-hidden="true">◉</span>
-            <span>
-              <strong>Text model</strong><br />
-              <span id="text-model-name">Checking Gemini...</span><br />
-              <strong>Image model</strong><br />
-              <span id="vision-model-name">Checking Gemini...</span>
-            </span>
+            <span class="model-indicator" aria-hidden="true"></span>
+            <span><strong id="text-model-name">Checking Gemini...</strong><br />
+              <span id="vision-model-name">Checking image model...</span></span>
           </div>
         </div>
 
-        <section class="chat-card" aria-label="Conversation">
+        <section class="chat-card" id="chat-widget" aria-label="AI assistant chat" hidden>
           <div class="chat-heading">
             <div>
-              <h2>New conversation</h2>
-              <p>Chat, images, and voice are sent to Google Gemini.</p>
+              <div class="chat-heading-title">
+                <span class="assistant-avatar" aria-hidden="true">m</span>
+                <div>
+                  <h2>Your thinking buddy</h2>
+                  <p><span class="status-dot" aria-hidden="true"></span> Here whenever you need a hand</p>
+                </div>
+              </div>
             </div>
-            <button class="clear-button" id="clear-chat" type="button">
-              Clear chat
-            </button>
+            <div class="chat-heading-actions">
+              <button class="clear-button" id="clear-chat" type="button">
+                Clear chat
+              </button>
+              <button
+                class="close-chat-button"
+                id="close-chat"
+                type="button"
+                aria-label="Close chat"
+                title="Close chat"
+              >×</button>
+            </div>
           </div>
 
           <div class="messages" id="messages" aria-live="polite">
             <div class="welcome-message" id="welcome-message">
               <div class="welcome-icon" aria-hidden="true">✦</div>
-              <h3>What would you like to figure out?</h3>
-              <p>Start with a question. You can always ask a follow-up.</p>
+              <p class="welcome-kicker">A FRESH LITTLE START</p>
+              <h3>What’s on your mind?</h3>
+              <p>Pick a starting point, or ask in your own words.</p>
               <div class="suggestions" aria-label="Try asking">
-                <button class="suggestion" type="button">
-                  Explain a tricky idea simply
+                <button class="suggestion" type="button" data-prompt="Explain a tricky idea simply">
+                  <span class="suggestion-icon" aria-hidden="true">✳</span>
+                  Explain something simply
                 </button>
-                <button class="suggestion" type="button">
-                  Help me plan my day
+                <button class="suggestion" type="button" data-prompt="Help me plan a lovely day">
+                  <span class="suggestion-icon" aria-hidden="true">↗</span>
+                  Plan a lovely day
+                </button>
+                <button class="suggestion" type="button" data-prompt="Help me write a clear and friendly message">
+                  <span class="suggestion-icon" aria-hidden="true">✎</span>
+                  Help me write
+                </button>
+                <button class="suggestion" type="button" data-prompt="Brainstorm a few creative ideas with me">
+                  <span class="suggestion-icon" aria-hidden="true">◎</span>
+                  Brainstorm ideas
                 </button>
               </div>
             </div>
           </div>
 
           <form class="composer" id="chat-form">
-            <label class="search-option" for="search-web">
-              <input id="search-web" type="checkbox" />
-              <span>
-                <strong>Search the web</strong>
-                <small id="search-status">
-                  Off · searches are sent to Tavily when enabled
-                </small>
-              </span>
-            </label>
+            <div class="composer-tools">
+              <label class="search-option" for="search-web">
+                <input id="search-web" type="checkbox" />
+                <span>
+                  <strong>Search the web</strong>
+                  <small id="search-status">
+                    Off · searches are sent to Tavily when enabled
+                  </small>
+                </span>
+              </label>
+              <label class="language-option" for="reply-language">
+                <span>Reply language</span>
+                <select id="reply-language">
+                  <option value="auto">Auto-detect</option>
+                  <option value="English">English</option>
+                  <option value="Hindi">हिन्दी</option>
+                  <option value="Telugu">తెలుగు</option>
+                  <option value="Tamil">தமிழ்</option>
+                  <option value="Spanish">Español</option>
+                  <option value="French">Français</option>
+                  <option value="German">Deutsch</option>
+                  <option value="Arabic">العربية</option>
+                  <option value="Japanese">日本語</option>
+                  <option value="Chinese">中文</option>
+                </select>
+              </label>
+              <button
+                class="image-mode-button"
+                id="image-mode-button"
+                type="button"
+                aria-pressed="false"
+                disabled
+                title="Switch to image generation"
+              >✧ Create image</button>
+            </div>
             <label class="visually-hidden" for="message-input">
               Your message
             </label>
@@ -99,6 +186,15 @@
               aria-label="Choose an image"
             />
             <button
+              class="camera-button"
+              id="camera-button"
+              type="button"
+              aria-label="Take a photo with your camera"
+              title="Take a photo"
+            >
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7.5h3l1.4-2h7.2l1.4 2h3A2 2 0 0 1 21 9.5v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9a2 2 0 0 1 1-2Z"/><circle cx="12" cy="13.5" r="4"/></svg>
+            </button>
+            <button
               class="attach-button"
               id="attach-button"
               type="button"
@@ -116,6 +212,14 @@
             >
               <span aria-hidden="true">🎙️</span>
             </button>
+            <button
+              class="voice-chat-button"
+              id="voice-chat-button"
+              type="button"
+              aria-pressed="false"
+              aria-label="Start hands-free voice chat"
+              title="Start hands-free voice chat"
+            ><span aria-hidden="true">🎧</span></button>
             <button class="send-button" id="send-button" type="submit">
               <span id="send-label">Send</span>
               <span aria-hidden="true">↑</span>
@@ -124,8 +228,7 @@
               Enter to send · Shift + Enter for a new line
             </p>
             <p class="attachment-status" id="attachment-status" aria-live="polite">
-              Image chat needs the moondream vision model. When ready, run
-              <code>ollama pull moondream</code> in PowerShell.
+              Attach a photo or take one with your camera.
             </p>
             <p class="search-result-status" id="search-result-status" aria-live="polite"></p>
           </form>
@@ -133,9 +236,53 @@
       </section>
 
       <footer class="footer">
-        <span>Made for curious minds.</span>
-        <span>Local-first · No API key needed</span>
+        <span>Made for curious minds, one question at a time.</span>
+        <span>Thoughtful help, powered by Gemini</span>
       </footer>
     </main>
+    <button
+      class="chat-launcher"
+      id="chat-launcher"
+      type="button"
+      aria-label="Open AI assistant chat"
+      aria-controls="chat-widget"
+      aria-expanded="false"
+    >
+      <span class="launcher-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6 7 7m10 10 1.4 1.4m0-12.8L17 7M7 17l-1.4 1.4"/><circle cx="12" cy="12" r="5"/></svg>
+      </span>
+      <span class="launcher-label">Let’s chat</span>
+    </button>
+    <dialog class="camera-dialog" id="camera-dialog" aria-labelledby="camera-title">
+      <div class="camera-heading">
+        <div>
+          <p class="eyebrow">A LITTLE LOOK</p>
+          <h2 id="camera-title">Take a photo</h2>
+        </div>
+        <button class="close-chat-button" id="close-camera" type="button" aria-label="Close camera">×</button>
+      </div>
+      <div class="camera-view">
+        <video id="camera-video" autoplay playsinline muted></video>
+        <div class="camera-placeholder" id="camera-placeholder">
+          <span aria-hidden="true">◎</span>
+          <p>Your camera preview will appear here.</p>
+        </div>
+      </div>
+      <p class="camera-status" id="camera-status" aria-live="polite">
+        Your camera starts only when you tap “Start camera”.
+      </p>
+      <div class="camera-actions">
+        <button class="camera-secondary-button" id="switch-camera" type="button" disabled>
+          Flip camera
+        </button>
+        <button class="camera-secondary-button" id="start-camera" type="button">
+          Start camera
+        </button>
+        <button class="camera-capture-button" id="capture-photo" type="button" disabled>
+          <span aria-hidden="true">●</span> Take photo
+        </button>
+      </div>
+      <p class="camera-privacy">The photo is attached to your chat. Gemini processes it in the cloud when you send it.</p>
+    </dialog>
   </body>
 </html>

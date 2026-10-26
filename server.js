@@ -2,11 +2,13 @@ const http = require("node:http");
 const path = require("node:path");
 const fs = require("node:fs");
 
-const HOST = "127.0.0.1";
+const HOST = process.env.HOST || (process.env.PORT ? "0.0.0.0" : "127.0.0.1");
 const PORT = Number(process.env.PORT) || 3000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}`;
+const GEMINI_IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-nano-banana-2.1";
+const GEMINI_INTERACTIONS_URL = "https://generativelanguage.googleapis.com/v1beta/interactions";
 const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 const TAVILY_SEARCH_URL = "https://api.tavily.com/search";
 const PUBLIC_FOLDER = path.join(__dirname, "public");
@@ -14,6 +16,12 @@ const MAX_REQUEST_SIZE = 10 * 1024 * 1024;
 const MAX_AUDIO_SIZE = 8 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_SEARCH_QUERY_LENGTH = 500;
+const MAX_IMAGE_PROMPT_LENGTH = 1000;
+const MAX_GENERATED_IMAGE_BYTES = 12 * 1024 * 1024;
+const REPLY_LANGUAGES = new Set([
+  "auto", "English", "Hindi", "Telugu", "Tamil", "Spanish", "French",
+  "German", "Arabic", "Japanese", "Chinese",
+]);
 
 const publicFiles = {
   "/": ["index.html", "text/html; charset=utf-8"],
@@ -148,8 +156,29 @@ function isCurrentDateTimeQuestion(text) {
   );
 }
 
-function formatCurrentDateTime(currentTime) {
-  const formatted = new Intl.DateTimeFormat("en-US", {
+function formatCurrentDateTime(currentTime, replyLanguage, userMessage) {
+  const locales = {
+    English: "en-US",
+    Hindi: "hi-IN",
+    Telugu: "te-IN",
+    Tamil: "ta-IN",
+    Spanish: "es-ES",
+    French: "fr-FR",
+    German: "de-DE",
+    Arabic: "ar-SA",
+    Japanese: "ja-JP",
+    Chinese: "zh-CN",
+  };
+  let locale = locales[replyLanguage];
+  if (!locale && /[\u0c00-\u0c7f]/u.test(userMessage)) locale = "te-IN";
+  else if (!locale && /[\u0b80-\u0bff]/u.test(userMessage)) locale = "ta-IN";
+  else if (!locale && /[\u0900-\u097f]/u.test(userMessage)) locale = "hi-IN";
+  else if (!locale && /[\u0600-\u06ff]/u.test(userMessage)) locale = "ar-SA";
+  else if (!locale && /[\u3040-\u30ff]/u.test(userMessage)) locale = "ja-JP";
+  else if (!locale && /[\u4e00-\u9fff]/u.test(userMessage)) locale = "zh-CN";
+  locale ||= "en-US";
+
+  const formatted = new Intl.DateTimeFormat(locale, {
     timeZone: currentTime.timeZone,
     weekday: "long",
     year: "numeric",
@@ -161,7 +190,9 @@ function formatCurrentDateTime(currentTime) {
     hourCycle: "h12",
   }).format(currentTime.date);
 
-  return `It is ${formatted} (${currentTime.timeZone}, ${currentTime.offset}).`;
+  return locale === "en-US"
+    ? `It is ${formatted} (${currentTime.timeZone}, ${currentTime.offset}).`
+    : `${formatted} (${currentTime.timeZone}, ${currentTime.offset}).`;
 }
 
 function sendStreamedReply(response, content, sources = []) {
@@ -406,6 +437,17 @@ async function handleChat(request, response) {
     return;
   }
 
+  const replyLanguage =
+    typeof body.replyLanguage === "string" && REPLY_LANGUAGES.has(body.replyLanguage)
+      ? body.replyLanguage
+      : body.replyLanguage === undefined
+        ? "auto"
+        : undefined;
+  if (!replyLanguage) {
+    sendJson(response, 400, { error: "Choose a supported reply language." });
+    return;
+  }
+
   const searchWebRequested = body.searchWeb === true;
   const lastMessage = body.messages[body.messages.length - 1];
   const currentTime = getCurrentTime(body.currentTime);
@@ -416,7 +458,10 @@ async function handleChat(request, response) {
     !lastMessage.images?.length &&
     isCurrentDateTimeQuestion(lastMessage.content)
   ) {
-    sendStreamedReply(response, formatCurrentDateTime(currentTime));
+    sendStreamedReply(
+      response,
+      formatCurrentDateTime(currentTime, replyLanguage, lastMessage.content),
+    );
     return;
   }
 
@@ -473,6 +518,9 @@ async function handleChat(request, response) {
   let systemInstruction =
     "You are a helpful assistant. Give clear, concise answers. " +
     "Do not claim you used a tool unless the request data confirms it.";
+  systemInstruction += replyLanguage === "auto"
+    ? " Reply in the same language as the latest user message. If the user mixes languages, use the language they use most. Keep names, code, and requested translations accurate."
+    : ` Reply in ${replyLanguage}, unless the user explicitly asks for a different language.`;
   if (currentTime) {
     systemInstruction +=
       ` The user's current date and time is ${currentTime.date.toISOString()} ` +
@@ -606,11 +654,115 @@ async function handleChat(request, response) {
   }
 }
 
+async function handleImageGeneration(request, response) {
+  if (!request.headers["content-type"]?.includes("application/json")) {
+    sendJson(response, 415, { error: "Send the image prompt as JSON." });
+    return;
+  }
+
+  let body;
+  try {
+    body = await readJsonBody(request);
+  } catch (error) {
+    if (!response.destroyed) {
+      sendJson(response, 400, { error: error.message });
+    }
+    return;
+  }
+
+  if (
+    typeof body.prompt !== "string" ||
+    !body.prompt.trim() ||
+    body.prompt.trim().length > MAX_IMAGE_PROMPT_LENGTH
+  ) {
+    sendJson(response, 400, {
+      error: `Enter an image description of 1 to ${MAX_IMAGE_PROMPT_LENGTH} characters.`,
+    });
+    return;
+  }
+
+  if (!GEMINI_API_KEY) {
+    sendJson(response, 503, {
+      error: "Image generation needs GEMINI_API_KEY. Set it in PowerShell, then restart the app.",
+    });
+    return;
+  }
+
+  try {
+    const imageResponse = await fetch(GEMINI_INTERACTIONS_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": GEMINI_API_KEY,
+      },
+      body: JSON.stringify({
+        model: GEMINI_IMAGE_MODEL,
+        input: [{ type: "text", text: body.prompt.trim() }],
+      }),
+      signal: AbortSignal.timeout(180000),
+    });
+
+    if (!imageResponse.ok) {
+      const errorBody = await imageResponse.json().catch(() => ({}));
+      const details = errorBody.error?.message;
+      if (imageResponse.status === 429) {
+        sendJson(response, 429, {
+          error: "Google's image-generation quota or rate limit was reached. Wait and try again; the app does not enable paid billing.",
+        });
+        return;
+      }
+      sendJson(response, geminiHttpStatus(imageResponse.status), {
+        error: details
+          ? `Google image generation returned an error (${imageResponse.status}): ${details.slice(0, 300)}`
+          : `Google image generation returned an error (${imageResponse.status}).`,
+      });
+      return;
+    }
+
+    const result = await imageResponse.json();
+    const image = result.output_image ||
+      (Array.isArray(result.outputs)
+        ? [...result.outputs].reverse().find((output) => output.type === "image")
+        : undefined);
+    const imageMimeType = image?.mime_type || image?.mimeType;
+    if (
+      typeof image?.data !== "string" ||
+      !["image/png", "image/jpeg", "image/webp"].includes(imageMimeType) ||
+      !/^[A-Za-z0-9+/]+={0,2}$/.test(image.data)
+    ) {
+      sendJson(response, 502, {
+        error: "Google did not return a supported image. Try a different description.",
+      });
+      return;
+    }
+
+    const imageBytes = Buffer.from(image.data, "base64");
+    if (imageBytes.length > MAX_GENERATED_IMAGE_BYTES) {
+      sendJson(response, 502, {
+        error: "The generated image was too large to display. Try a simpler description.",
+      });
+      return;
+    }
+
+    sendJson(response, 200, {
+      imageDataUrl: `data:${imageMimeType};base64,${image.data}`,
+      mimeType: imageMimeType,
+    });
+  } catch (error) {
+    console.error("Could not generate image:", error.message);
+    sendJson(response, 503, {
+      error: "Could not reach Google's image-generation service. Check your internet connection and try again.",
+    });
+  }
+}
+
 async function handleStatus(response) {
   sendJson(response, 200, {
     textModel: GEMINI_MODEL,
     visionModel: GEMINI_MODEL,
+    imageModel: GEMINI_IMAGE_MODEL,
     geminiAvailable: Boolean(GEMINI_API_KEY),
+    imageGenerationAvailable: Boolean(GEMINI_API_KEY),
     searchAvailable: true,
     searchMode: TAVILY_API_KEY ? "key" : "keyless",
   });
@@ -648,6 +800,11 @@ const server = http.createServer((request, response) => {
 
   if (request.method === "POST" && requestUrl.pathname === "/api/transcribe") {
     handleTranscription(request, response);
+    return;
+  }
+
+  if (request.method === "POST" && requestUrl.pathname === "/api/generate-image") {
+    handleImageGeneration(request, response);
     return;
   }
 
